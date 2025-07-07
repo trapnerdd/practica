@@ -1,0 +1,172 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
+
+import csv
+import time
+
+def shaker_sort(massiv):
+
+    start = 0
+    end = len(massiv) - 1
+
+    while True:
+        swap = False
+        for i in range(start, end):
+            current_element = massiv[i]
+            next_element = massiv[i + 1]
+            if current_element > next_element:
+                massiv[i] = next_element
+                massiv[i + 1] = current_element
+                swap = True
+        
+        end -= 1
+        if swap == False:
+            break
+        swap = False
+        for i in range(end, start, -1):
+            current_element = massiv[i]
+            next_element = massiv[i - 1]
+            if current_element < next_element:
+                massiv[i] = next_element
+                massiv[i - 1] = current_element
+                swap = True
+        start += 1
+        if swap == False:
+            break
+    return massiv
+
+def shaker_sort_steps(massiv):
+    steps = []
+
+    start = 0
+    end = len(massiv) - 1
+
+    while True:
+        swap = False
+        steps.append("проход вперед:")
+        for i in range(start, end):
+            current_element = massiv[i]
+            next_element = massiv[i + 1]
+            if current_element > next_element:
+                massiv[i] = next_element
+                massiv[i + 1] = current_element
+                swap = True
+            steps.append(f"{massiv}     –       {current_element} > {next_element}?") 
+        
+        end -= 1
+        steps.append("проход назад:")
+        if swap == False:
+            break
+        swap = False
+        for i in range(end, start, -1):
+            current_element = massiv[i]
+            next_element = massiv[i - 1]
+            if current_element < next_element:
+                massiv[i] = next_element
+                massiv[i - 1] = current_element
+                swap = True
+            steps.append(f"{massiv}     –       {current_element} < {next_element}?") 
+        start += 1
+        if swap == False:
+            break
+    return steps
+
+
+
+
+def input_check(input_data):
+    input_data = input_data.split(",")
+    massiv = []
+    for i in input_data:
+        try:
+            massiv.append(int(i.strip()))
+        except ValueError:
+            messagebox.showerror("Ошибка", "Введите числа через запятую")
+            return False
+    return massiv
+
+def array_sort():
+    global last_sorted_massiv
+    input_str = input_data.get()
+    massiv = input_check(input_str)
+    if massiv == False:
+        return False
+    else:
+        start_time = time.time()
+        sorted_massiv = shaker_sort(massiv.copy()) #чтобы не изменять оригинал
+        total_time = time.time() - start_time
+        output.config(text=f"{sorted_massiv} \n\n Время сортировки: {total_time:.6f} секунд ")
+
+        last_sorted_massiv = sorted_massiv  # Сохраняем результат для сохранения в файл
+
+        return show_steps(massiv)
+
+    
+def show_steps(massiv):
+    steps_list = shaker_sort_steps(massiv)
+    steps_text = "\n\n".join(map(str, steps_list)) #преобразуем список содержащий строки и списки с числами в строку
+    
+    steps.config(text=f"{steps_text}")
+
+
+def upload_csv():
+    file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+    if not file_path:
+        if not file_path:
+            return False
+    try:
+        with open(file_path, "r") as file:
+            reader = csv.reader(file)
+            values = []
+            for row in reader:
+                for item in row:
+                    values.append(int(item.strip()))
+            input_data.delete(0, tk.END)
+            input_data.insert(0, ",".join(map(str, values)))
+    except Exception as e:
+        messagebox.showerror("Ошибка при загрузке CSV", str(e))
+
+def save_csv():
+    if not last_sorted_massiv:
+        messagebox.showwarning("Нет данных", "Сначала отсортируйте массив.")
+        return False
+
+    file_path = filedialog.asksaveasfilename(defaultextension=".csv",
+                                             filetypes=[("CSV Files", "*.csv")],
+                                             title="Сохранить отсортированный массив")
+    if file_path:
+        try:
+            with open(file_path, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(last_sorted_massiv)
+            messagebox.showinfo("Успешно", "Результат сохранён.")
+        except Exception as e:
+            messagebox.showerror("Ошибка при сохранении", str(e))
+
+window = tk.Tk()
+window.title("Сортировка шейкером")
+window.geometry("500x250")
+
+
+last_sorted_massiv = []
+
+tk.Label(window, text="Введите массив (через запятую): ").pack(pady=5)
+input_data = tk.Entry(window, width=60)
+input_data.pack(pady=5)
+
+tk.Button(window, text="Загрузить .csv", command=upload_csv).pack(pady=5)
+tk.Button(window, text="Сортировать", command=array_sort).pack(pady=5)
+
+
+output_label = tk.Label(window, text="Результат: ")
+output_label.pack(pady=10)
+output = tk.Label(window, text="")
+output.pack(pady=10)
+steps_label = tk.Label(window, text="Шаги сортировки:")
+steps_label.pack(pady=20)
+steps = tk.Label(window, text="", justify="left")
+steps.pack(pady=5)
+tk.Button(window, text="Сохранить результат", command=save_csv).pack(pady=5)
+
+
+window.mainloop()
