@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 
 import csv
 import time
+import random
 
 def shaker_sort(massiv):
 
@@ -142,12 +143,61 @@ def save_csv():
             messagebox.showinfo("Успешно", "Результат сохранён.")
         except Exception as e:
             messagebox.showerror("Ошибка при сохранении", str(e))
+            
+def generate_randomdata():
+    try:
+        amount = int(input_data2.get().strip())
+        range_str = input_data3.get().strip()
+        min_max = input_check(range_str)
+        if not min_max or len(min_max) != 2:
+            raise ValueError("Укажите два числа через запятую для диапазона.")
+
+        min_value, max_value = min_max
+        if min_value > max_value:
+            raise ValueError("Минимум не может быть больше максимума.")
+
+        array = [random.randint(min_value, max_value) for _ in range(amount)]
+        
+        
+
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
+                                                 filetypes=[("CSV Files", "*.csv")],
+                                                 title="Сохранить массив")
+        if file_path:
+            with open(file_path, 'w', newline='') as file:
+                writer2 = csv.writer(file)
+                writer2.writerow(array)
+
+            messagebox.showinfo("Успешно", "Массив сгенерирован и сохранён.")
+    except Exception as e:
+        messagebox.showerror("Ошибка", str(e))
+
+def generate_csv():
+    global input_data2, input_data3
+    window_mini = tk.Tk()
+    window_mini.title("Генерация массива")
+    window_mini.geometry("450x200")
+    
+    tk.Label(window_mini, text="Введите количество элементов массива: ").pack(pady=5)
+    input_data2 = tk.Entry(window_mini, width=60)
+    input_data2.pack(pady=5)
+    tk.Label(window_mini, text="Введите диапазон элементов через запятую (например -100, 100): ").pack(pady=5)
+    input_data3 = tk.Entry(window_mini, width=60)
+    input_data3.pack(pady=5)
+    
+    tk.Button(window_mini, text="Сохранить массив", command=generate_randomdata).pack(pady=5)
+    window_mini.mainloop()
+
+    
+    
+    
 
 window = tk.Tk()
 window.title("Сортировка шейкером")
 window.geometry("500x250")
 
-
+input_data2 = []
+input_data3 = []
 last_sorted_massiv = []
 
 tk.Label(window, text="Введите массив (через запятую): ").pack(pady=5)
@@ -156,6 +206,7 @@ input_data.pack(pady=5)
 
 tk.Button(window, text="Загрузить .csv", command=upload_csv).pack(pady=5)
 tk.Button(window, text="Сортировать", command=array_sort).pack(pady=5)
+tk.Button(window, text="Сгенерировать массив", command=generate_csv).pack(pady=5)
 
 
 output_label = tk.Label(window, text="Результат: ")
